@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  cfs:
+    build: ./cfs/
+    volumes:
+      - ./cfs:/usr/local/bin/calendar-from-streamn:rw
+      - .:/workspace:cached
+    command: /bin/sh -c "while sleep 1000; do :; done"
