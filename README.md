@@ -13,6 +13,11 @@ Youtube(+etc...?)の配信予定をgoogleカレンダーに追加するやつ
  - Youtube Data API
  - Google Calendar API
 
+## System diagram
+こんな感じ 
+
+![cfs](https://user-images.githubusercontent.com/86540016/144742277-ed6a18cc-a28a-4af9-89fc-f79403d6fb6f.png)
+
 ## 進捗どうですか？
 だめです()
 
