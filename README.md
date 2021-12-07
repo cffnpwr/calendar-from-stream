@@ -16,7 +16,7 @@ Youtube(+etc...?)の配信予定をgoogleカレンダーに追加するやつ
 ## System diagram
 こんな感じ 
 
-![cfs](https://user-images.githubusercontent.com/86540016/144742277-ed6a18cc-a28a-4af9-89fc-f79403d6fb6f.png)
+<img src="https://user-images.githubusercontent.com/86540016/145006623-f4a4b6c8-c0c2-4682-b5d4-28f70b882cd7.png" width="50%"></img>
 
 ## 進捗どうですか？
 だめです()
