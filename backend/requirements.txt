@@ -1,0 +1,9 @@
+Django<4.0
+djangorestframework
+djangorestframework-jwt
+pytz
+psycopg2
+python-decouple
+requests
+google-auth
+google-api-python-client

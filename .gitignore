@@ -130,3 +130,9 @@ dmypy.json
 
 # for VSCode remote container
 .devcontainer/
+
+# for django
+migrations/
+
+# for db
+db/data/

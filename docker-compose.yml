@@ -1,9 +1,28 @@
-version: '2'
+version: '3'
 
 services:
-  cfs:
-    build: ./cfs/
+  backend:
+    build: ./backend
     volumes:
-      - ./cfs:/usr/local/bin/calendar-from-streamn:rw
+      - ./backend:/opt/cfs/backend:rw
       - .:/workspace:cached
-    command: /bin/sh -c "while sleep 1000; do :; done"
+    ports:
+      - '0.0.0.0:5000:5000'
+    command: /bin/sh -c "./build.sh && python manage.py runserver 0.0.0.0:5000"
+    environment:
+      TZ: "Asia/Tokyo"
+    restart: always
+    depends_on:
+      - db
+  db:
+    build: ./db
+    volumes:
+      - ./db/initdb:/docker-entrypoint-initdb.d
+      - ./db/data:/var/lib/postgresql/data:rw
+    ports:
+      - 0.0.0.0:5432:5432
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      TZ: "Asia/Tokyo"
+    tty: true
