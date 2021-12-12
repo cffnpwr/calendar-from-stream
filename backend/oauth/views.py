@@ -46,7 +46,7 @@ def googleOAuth2(request):
                     instance=queryset, data=data, partial=True)
 
             except:
-                data['urlList'] = json.dumps({'urlList': []})
+                data['urlList'] = {'urlList': []}
                 serializer = UserSerializer(data=data)
 
             if serializer.is_valid():
