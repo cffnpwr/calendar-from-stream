@@ -1,7 +1,8 @@
-from django.urls import path
+from django.conf.urls import url
 
 from oauth import views
 
+
 urlpatterns = [
-    path(r'google-oauth2/', views.googleOAuth2),
+    url(r'google-oauth2/', views.googleOAuth2),
 ]

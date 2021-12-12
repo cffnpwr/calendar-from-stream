@@ -1,4 +1,5 @@
 import datetime
+import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import permissions, status
@@ -6,8 +7,8 @@ import rest_framework_jwt.utils as jwtUtil
 import requests
 
 import cfs.settings
-from oauth.serializer import UserSerializer
-from oauth.models import User
+from user.serializer import UserSerializer
+from user.models import User
 
 
 @api_view()
@@ -41,9 +42,11 @@ def googleOAuth2(request):
 
             try:
                 queryset = User.objects.get(id=userId)
-                serializer = UserSerializer(instance=queryset, data=data)
+                serializer = UserSerializer(
+                    instance=queryset, data=data, partial=True)
 
             except:
+                data['urlList'] = json.dumps({'urlList': []})
                 serializer = UserSerializer(data=data)
 
             if serializer.is_valid():

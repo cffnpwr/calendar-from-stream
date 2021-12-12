@@ -1,8 +1,10 @@
 from django.contrib import admin
-from django.urls import path
-from django.urls.conf import include
+from django.conf.urls import include, url
+
+from user.views import UserView
 
 urlpatterns = [
-    path(r'admin/', admin.site.urls),
-    path(r'auth/', include('oauth.urls'))
+    url(r'admin/', admin.site.urls),
+    url(r'auth/', include('oauth.urls')),
+    url(r'users/', include('user.urls'))
 ]
