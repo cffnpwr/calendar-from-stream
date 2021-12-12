@@ -1,3 +1,4 @@
+import json
 import re
 import requests
 from googleapiclient.discovery import build
@@ -9,7 +10,7 @@ class YoutubeAPI:
         self.youtube = build('youtube', 'v3', developerKey=apiKey)
 
     def getStreamDetailsFromURL(self, url):
-        rslt = []
+        strmList = []
 
         cid = self.getChannelIdFromURL(url)
         ftrStrmList = self.getFutureStreamListFromChannel(cid)
@@ -18,9 +19,11 @@ class YoutubeAPI:
             strmDetails = self.getStreamDetailsFromVideoID(strm)
 
             if strmDetails != None:
-                rslt.append(strmDetails)
+                strmList.append(strmDetails)
 
-        return rslt
+        strmListDic = {'streams': strmList}
+        return json.dumps(strmListDic, indent=4, ensure_ascii=False)
+        # return strmListDic
 
     def getChannelIdFromURL(self, url):
         channelIdPattern = '(https?://)?(www.)?youtube.com/channel/UC[\w-]{22}/?'
