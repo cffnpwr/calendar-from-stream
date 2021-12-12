@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'oauth'
+    'oauth',
+    'user'
 ]
 
 MIDDLEWARE = [
@@ -139,14 +140,24 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'user.authentication.JWTUserIdAuthentication',
     ),
     'NON_FIELD_ERRORS_KEY': 'detail',
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
 
+with open(config('JWT_PRIVATE_KEY')) as f:
+    JWT_PRIVATE_KEY = f.read()
+
+with open(config('JWT_PUBLIC_KEY')) as f:
+    JWT_PUBLIC_KEY = f.read()
+
 JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': False,
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
-    'JWT_SECRET_KEY': config('JWT_SECRET_KEY')
+    'JWT_ALGORITHM': 'RS256',
+    'JWT_PRIVATE_KEY': JWT_PRIVATE_KEY,
+    'JWT_PUBLIC_KEY': JWT_PUBLIC_KEY,
+    'JWT_SECRET_KEY': config('JWT_SECRET_KEY'),
+    'JWT_PAYLOAD_GET_USERNAME_HANDLER': 'user.utils.jwtGetUseIdFromPayloadHandler'
 }

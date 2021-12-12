@@ -1,6 +1,7 @@
 Django<4.0
 djangorestframework
 djangorestframework-jwt
+cryptography
 pytz
 psycopg2
 python-decouple
