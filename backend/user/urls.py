@@ -1,7 +1,9 @@
+from django.conf.urls import url
 from django.urls import path
 
-from user.views import UserView
+from user import views
 
 urlpatterns = [
-    path('<str:id>/', UserView.as_view())
+    url(r'login/', views.loginRedirect),
+    path(r'<str:id>/', views.UserView.as_view()),
 ]
