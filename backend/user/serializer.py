@@ -5,7 +5,7 @@ from user.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'urlList')
+        fields = ('id', 'accessToken', 'refreshToken', 'urlList')
         extra_kwargs = {
             'accessToken': {'write_only': True},
             'refreshToken': {'write_only': True}
