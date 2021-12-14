@@ -5,7 +5,6 @@ services:
     build: ./backend
     volumes:
       - ./backend:/opt/cfs/backend:rw
-      - .:/workspace:cached
     ports:
       - '0.0.0.0:5000:5000'
     command: /bin/sh -c "./build.sh && python manage.py runserver 0.0.0.0:5000"
@@ -25,4 +24,12 @@ services:
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: postgres
       TZ: "Asia/Tokyo"
+    tty: true
+  cfs-core:
+    build: ./cfsCore
+    volumes:
+      - ./cfs:/opt/cfs/cfsCore:rw
+      - .:/workspace:cached
+    depends_on:
+      - db
     tty: true

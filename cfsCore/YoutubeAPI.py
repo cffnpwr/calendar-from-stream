@@ -13,17 +13,17 @@ class YoutubeAPI:
         strmList = []
 
         cid = self.getChannelIdFromURL(url)
-        ftrStrmList = self.getFutureStreamListFromChannel(cid)
 
-        for strm in ftrStrmList:
-            strmDetails = self.getStreamDetailsFromVideoID(strm)
+        if cid:
+            ftrStrmList = self.getFutureStreamListFromChannel(cid)
 
-            if strmDetails != None:
-                strmList.append(strmDetails)
+            for strm in ftrStrmList:
+                strmDetails = self.getStreamDetailsFromVideoID(strm)
 
-        strmListDic = {'streams': strmList}
-        return json.dumps(strmListDic, indent=4, ensure_ascii=False)
-        # return strmListDic
+                if strmDetails:
+                    strmList.append(strmDetails)
+
+        return strmList
 
     def getChannelIdFromURL(self, url):
         channelIdPattern = '(https?://)?(www.)?youtube.com/channel/UC[\w-]{22}/?'
