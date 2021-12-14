@@ -29,7 +29,7 @@ class UserView(generics.RetrieveUpdateAPIView):
         instance = self.get_object()
 
         if self.get_serializer(instance).data['id'] == request.user.id:
-            serializer = self.get_serializer(instance, data=request.data)
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
 
             if serializer.is_valid():
                 serializer.save()
