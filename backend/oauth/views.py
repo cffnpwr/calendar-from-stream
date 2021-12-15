@@ -42,6 +42,9 @@ def googleOAuth2(request):
 
     userId = decodedIdToken['sub']
 
+    if not userId:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
     try:
         data = {
             'accessToken': tokenResData['access_token'],
