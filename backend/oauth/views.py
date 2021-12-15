@@ -8,6 +8,7 @@ import requests
 import cfs.settings
 from user.serializer import UserSerializer
 from user.models import User
+from oauth.utils import validateIdToken
 
 
 @api_view(['GET'])
@@ -29,43 +30,44 @@ def googleOAuth2(request):
 
     # return Response(tokenResData)
 
-    if tokenRes.status_code == requests.codes.ok:
-        userInfoRes = requests.get('https://www.googleapis.com/oauth2/v2/userinfo',
-                                   params={'access_token': tokenResData['access_token']})
+    if tokenRes.status_code != requests.codes.ok:
+        return Response(tokenResData, status=status.HTTP_401_UNAUTHORIZED)
 
-        if userInfoRes.status_code == requests.codes.ok:
-            userId = userInfoRes.json()['id']
+    decodedIdToken = validateIdToken(
+        tokenResData['id_token'],
+        'https://www.googleapis.com/oauth2/v3/certs',
+        'https://accounts.google.com',
+        cfs.settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+    )
 
-            try:
-                data = {
-                    'accessToken': tokenResData['access_token'],
-                    'expiryDate': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=tokenResData['expires_in']),
-                }
-                if 'refresh_token' in tokenResData:
-                    data['refreshToken'] = tokenResData['refresh_token']
-                queryset = User.objects.get(id=userId)
-                serializer = UserSerializer(
-                    instance=queryset, data=data, partial=True)
+    userId = decodedIdToken['sub']
 
-            except:
-                data = {
-                    'id': userId,
-                    'accessToken': tokenResData['access_token'],
-                    'refreshToken': tokenResData['refresh_token'],
-                    'expiryDate': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=tokenResData['expires_in']),
-                    'urlList': {'urlList': []}
-                }
-                serializer = UserSerializer(data=data)
+    try:
+        data = {
+            'accessToken': tokenResData['access_token'],
+            'expiryDate': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=tokenResData['expires_in']),
+        }
+        if 'refresh_token' in tokenResData:
+            data['refreshToken'] = tokenResData['refresh_token']
+        queryset = User.objects.get(id=userId)
+        serializer = UserSerializer(
+            instance=queryset, data=data, partial=True)
 
-            if serializer.is_valid():
-                serializer.save()
+    except:
+        data = {
+            'id': userId,
+            'accessToken': tokenResData['access_token'],
+            'refreshToken': tokenResData['refresh_token'],
+            'expiryDate': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=tokenResData['expires_in']),
+            'urlList': {'urlList': []}
+        }
+        serializer = UserSerializer(data=data)
 
-                jwtToken = jwtUtil.jwt_encode_handler(
-                    {'userId': userId, 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)})
-                return Response({'token': jwtToken}, status=status.HTTP_200_OK)
+    if serializer.is_valid():
+        serializer.save()
 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        jwtToken = jwtUtil.jwt_encode_handler(
+            {'userId': userId, 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)})
+        return Response({'token': jwtToken}, status=status.HTTP_200_OK)
 
-        return Response(userInfoRes.json(), status=status.HTTP_401_UNAUTHORIZED)
-
-    return Response(tokenResData, status=status.HTTP_401_UNAUTHORIZED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
