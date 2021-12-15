@@ -35,12 +35,11 @@ def googleOAuth2(request):
 
         if userInfoRes.status_code == requests.codes.ok:
             userId = userInfoRes.json()['id']
-            
 
             try:
                 data = {
                     'accessToken': tokenResData['access_token'],
-                    'expiryDate': datetime.datetime.utcnow() + datetime.timedelta(seconds=tokenResData['expires_in']),
+                    'expiryDate': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=tokenResData['expires_in']),
                 }
                 if 'refresh_token' in tokenResData:
                     data['refreshToken'] = tokenResData['refresh_token']
@@ -53,7 +52,7 @@ def googleOAuth2(request):
                     'id': userId,
                     'accessToken': tokenResData['access_token'],
                     'refreshToken': tokenResData['refresh_token'],
-                    'expiryDate': datetime.datetime.utcnow() + datetime.timedelta(seconds=tokenResData['expires_in']),
+                    'expiryDate': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=tokenResData['expires_in']),
                     'urlList': {'urlList': []}
                 }
                 serializer = UserSerializer(data=data)
