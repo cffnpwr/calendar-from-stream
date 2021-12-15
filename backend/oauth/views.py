@@ -27,25 +27,35 @@ def googleOAuth2(request):
         'https://www.googleapis.com/oauth2/v4/token', data=data, headers=headers)
     tokenResData = tokenRes.json()
 
+    # return Response(tokenResData)
+
     if tokenRes.status_code == requests.codes.ok:
         userInfoRes = requests.get('https://www.googleapis.com/oauth2/v2/userinfo',
                                    params={'access_token': tokenResData['access_token']})
 
         if userInfoRes.status_code == requests.codes.ok:
             userId = userInfoRes.json()['id']
-            data = {
-                'id': userId,
-                'accessToken': tokenResData['access_token'],
-                'refreshToken': tokenResData['refresh_token']
-            }
+            
 
             try:
+                data = {
+                    'accessToken': tokenResData['access_token'],
+                    'expiryDate': datetime.datetime.utcnow() + datetime.timedelta(seconds=tokenResData['expires_in']),
+                }
+                if 'refresh_token' in tokenResData:
+                    data['refreshToken'] = tokenResData['refresh_token']
                 queryset = User.objects.get(id=userId)
                 serializer = UserSerializer(
                     instance=queryset, data=data, partial=True)
 
             except:
-                data['urlList'] = {'urlList': []}
+                data = {
+                    'id': userId,
+                    'accessToken': tokenResData['access_token'],
+                    'refreshToken': tokenResData['refresh_token'],
+                    'expiryDate': datetime.datetime.utcnow() + datetime.timedelta(seconds=tokenResData['expires_in']),
+                    'urlList': {'urlList': []}
+                }
                 serializer = UserSerializer(data=data)
 
             if serializer.is_valid():
