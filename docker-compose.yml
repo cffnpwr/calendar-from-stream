@@ -32,4 +32,6 @@ services:
       - .:/workspace:cached
     depends_on:
       - db
+      - backend
+    command: python main.py
     tty: true

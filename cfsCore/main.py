@@ -1,3 +1,5 @@
+import schedule
+import time
 import datetime
 from decouple import config
 
@@ -26,8 +28,7 @@ Youtube API で配信予定取得 <- ok
 
 
 def main():
-    if __name__ != '__main__':
-        quit()
+    print('start!!')
 
     tokenList = getAccessTokenList()
     streamDetailsList = getStreamDetailList()
@@ -189,4 +190,9 @@ def getCalendarIdFromDB(userId):
     return cId[0]['calendarId']
 
 
-main()
+if __name__ == '__main__':
+    schedule.every(10).minutes.do(main)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
