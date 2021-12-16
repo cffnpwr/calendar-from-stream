@@ -42,3 +42,26 @@ class Database:
             dicRslt.append(dict(row))
 
         return dicRslt
+
+    def updateRecordWithColumns(self, table, setValue, conditionValue):
+        values = []
+        conditions = []
+        sql = 'update ' + html.escape(table) + ' set '
+
+        for k, v in setValue.items():
+            sql += ('"' + k + '"' + ' = %s, ')
+            values.append(v)
+
+        sql = sql[:-2] + ' where '
+
+        for k, v in conditionValue.items():
+            sql += ('"' + k + '"' + ' = %s, ')
+            conditions.append(v)
+
+        sql = sql[:-2]
+
+        with self.dbCon.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute(sql, values + conditions)
+            self.dbCon.commit()
+
+        return
