@@ -7,8 +7,8 @@ Youtube(+etc...?)の配信予定をgoogleカレンダーに追加するやつ
 
 ## What does (framework, API, etc...) use ?
  - Docker Compose
- - Django(maybe)
- - Postgresql(maybe)
+ - Django
+ - Postgresql
  - React(maybe)
  - Youtube Data API
  - Google Calendar API
@@ -25,8 +25,10 @@ Youtube(+etc...?)の配信予定をgoogleカレンダーに追加するやつ
  - チャンネルURLから配信予定リストの取得 <- ヨシ！！
  - Google アカウントの紐付け <- ヨシ！！
  - Google APIでカレンダーの権限取得 <- ヨシ！！
- - Google カレンダーに予定を追加 <- だめです
+ - Google カレンダーに予定を追加 <- ヨシ！！
  - DBにアクセスしてユーザーごとに登録されたチャンネルURLの取得 <- ヨシ！！
+
+***バックエンド完成！！（Beta）***
 
 ### Frontend
 だめです(手を付けてない)
