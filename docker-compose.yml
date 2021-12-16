@@ -28,7 +28,7 @@ services:
   cfs-core:
     build: ./cfsCore
     volumes:
-      - ./cfs:/opt/cfs/cfsCore:rw
+      - ./cfsCore:/opt/cfs/cfsCore:rw
       - .:/workspace:cached
     depends_on:
       - db
