@@ -3,6 +3,7 @@ from decouple import config
 
 import googleAPIs
 from youtubeAPI import YoutubeAPI
+from calendarAPI import CalendarAPI
 from database import Database
 
 
@@ -28,7 +29,78 @@ def main():
     if __name__ != '__main__':
         quit()
 
-    print(getAccessTokenList())
+    tokenList = getAccessTokenList()
+    streamDetailsList = getStreamDetailList()
+
+    initCalendar()
+
+    for userId, token in tokenList.items():
+        EinY = streamDetailsList[userId]
+
+        calendarId = getCalendarIdFromDB(userId)
+
+        clndr = CalendarAPI(CLIENT_ID, CLIENT_SECRET, token)
+        EinC = clndr.getEvents(calendarId)
+
+        for ey in EinY:
+            isExist = False
+            for i, ec in enumerate(EinC):
+                if 'location' in ec:
+                    if ey['url'] == ec['location']:
+                        dt = ey['startTime']
+                        tz = datetime.timezone.utc if dt['Z'] == 'Z' else datetime.timezone(
+                            datetime.timedelta(hours=dt['Z']))
+                        eyStartTime = datetime.datetime(
+                            dt['Y'], dt['M'], dt['D'], dt['h'], dt['m'], dt['s'], tzinfo=tz)
+                        if ey['title'] != ec['summary'] or eyStartTime != ec['start']['dateTime'] or ey['who'] != ec['description']:
+                            #   カレンダーの更新
+                            body = {
+                                'summary': ey['title'],
+                                'description': ey['who'],
+                                'start': {
+                                    'dateTime': eyStartTime.isoformat()
+                                },
+                                'end': {
+                                    'dateTime': (eyStartTime + datetime.timedelta(hours=1)).isoformat()
+                                }
+                            }
+                            clndr.updateEvent(calendarId, ec['id'], body)
+
+                        #   特定URLの予定が存在する
+                        #   ここでEinCからecを削除する
+                        del EinC[i]
+                        isExist = True
+                        break
+
+                    #   URLが違うので次のecへ
+
+            #   ecが存在したなら何もしない
+            #   ecが存在しなかったら予定追加
+            if not isExist:
+                #   予定追加
+                dt = ey['startTime']
+                tz = datetime.timezone.utc if dt['Z'] == 'Z' else datetime.timezone(
+                    datetime.timedelta(hours=dt['Z']))
+                eyStartTime = datetime.datetime(
+                    dt['Y'], dt['M'], dt['D'], dt['h'], dt['m'], dt['s'], tzinfo=tz)
+                body = {
+                    'summary': ey['title'],
+                    'description': ey['who'],
+                    'location': ey['url']
+                }
+                startTime = {'dateTime': eyStartTime.isoformat()}
+                endTime = {'dateTime': (
+                    eyStartTime + datetime.timedelta(hours=1)).isoformat()}
+                clndr.insertEvent(calendarId, body, startTime, endTime)
+
+        #   すべてが終わったら
+        #   残ったEinCを予定から削除
+        for ec in EinC:
+            clndr.deleteEvent(calendarId, ec['id'])
+
+        del clndr
+
+    print('finished!!')
 
 
 def getStreamDetailList():
@@ -92,6 +164,29 @@ def getAccessTokenList():
     del db
 
     return accessTokenList
+
+
+def initCalendar():
+    db = Database(DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS)
+    noClndrIds = db.getRecordWithColumns(
+        DB_TABLE, ['id', 'accessToken'], {'calendarId': ''})
+
+    for noClndrId in noClndrIds:
+        clndr = CalendarAPI(CLIENT_ID, CLIENT_SECRET, noClndrId['accessToken'])
+        clndrId = clndr.makeNewCalendar(
+            '配信予定', description='create by Calendar from Stream Service')
+        del clndr
+
+        db.updateRecordWithColumns(DB_TABLE, {'calendarId': clndrId}, {
+                                   'id': noClndrId['id']})
+
+
+def getCalendarIdFromDB(userId):
+    db = Database(DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS)
+    cId = db.getRecordWithColumns(
+        DB_TABLE, ['calendarId'], {'id': userId})
+
+    return cId[0]['calendarId']
 
 
 main()

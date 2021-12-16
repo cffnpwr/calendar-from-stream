@@ -8,6 +8,9 @@ class YoutubeAPI:
     def __init__(self, apiKey):
         self.youtube = build('youtube', 'v3', developerKey=apiKey)
 
+    def __del__(self):
+        self.youtube.close()
+
     def getStreamDetailsFromURL(self, url):
         strmList = []
 
@@ -126,7 +129,7 @@ def convertTimeZone(YMDhmsZDic, dstTZ):
         rsltDate['D'] -= 1
         rsltDate['h'] += 24
 
-    elif rsltDate['h'] > 24:
+    elif rsltDate['h'] > 23:
         rsltDate['D'] += 1
         rsltDate['h'] -= 24
 

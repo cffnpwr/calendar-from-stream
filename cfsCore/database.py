@@ -43,22 +43,48 @@ class Database:
 
         return dicRslt
 
+    def getRecordWithColumns(self, table, columns, conditions):
+        cols = ''
+        conds = []
+
+        for col in columns:
+            cols += ('"' + html.escape(col) + '", ')
+
+        cols = cols[:-2]
+        sql = 'select ' + cols + ' from ' + html.escape(table) + ' where '
+
+        for k, v in conditions.items():
+            sql += ('"' + html.escape(k) + '"' + ' = %s and ')
+            conds.append(v)
+
+        sql = sql[:-5]
+
+        with self.dbCon.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute(sql, conds)
+            rslt = cur.fetchall()
+
+        dicRslt = []
+        for row in rslt:
+            dicRslt.append(dict(row))
+
+        return dicRslt
+
     def updateRecordWithColumns(self, table, setValue, conditionValue):
         values = []
         conditions = []
         sql = 'update ' + html.escape(table) + ' set '
 
         for k, v in setValue.items():
-            sql += ('"' + k + '"' + ' = %s, ')
+            sql += ('"' + html.escape(k) + '"' + ' = %s, ')
             values.append(v)
 
         sql = sql[:-2] + ' where '
 
         for k, v in conditionValue.items():
-            sql += ('"' + k + '"' + ' = %s, ')
+            sql += ('"' + html.escape(k) + '"' + ' = %s and ')
             conditions.append(v)
 
-        sql = sql[:-2]
+        sql = sql[:-5]
 
         with self.dbCon.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute(sql, values + conditions)
