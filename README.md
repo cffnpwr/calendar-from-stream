@@ -3,7 +3,8 @@ Add a stream schedule to google calendar
 
 ## What is this ?
 Youtube(+etc...?)の配信予定をgoogleカレンダーに追加するやつ
-(私の身内(?)で公開の要望が多ければ公開するわよ)
+~~(私の身内(?)で公開の要望が多ければ公開するわよ)~~
+しません。Youtube Data APIのquotaがたりなさすぎて私一人で精一杯
 
 ## What does (framework, API, etc...) use ?
  - Docker Compose
@@ -16,7 +17,7 @@ Youtube(+etc...?)の配信予定をgoogleカレンダーに追加するやつ
 ## System diagram
 こんな感じ 
 
-<img src="https://user-images.githubusercontent.com/86540016/145006623-f4a4b6c8-c0c2-4682-b5d4-28f70b882cd7.png" width="50%"></img>
+<img src="https://user-images.githubusercontent.com/86540016/145006623-f4a4b6c8-c0c2-4682-b5d4-28f70b882cd7.png" width="100%"></img>
 
 ## 進捗どうですか？
 だめです()
