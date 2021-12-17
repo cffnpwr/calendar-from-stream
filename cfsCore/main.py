@@ -18,6 +18,7 @@ DB_NAME = 'cfs'
 DB_USER = 'postgres'
 DB_PASS = 'postgres'
 DB_TABLE = 'user_user'
+JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
 
 '''
 DBから全取得 <- ok
@@ -28,7 +29,8 @@ Youtube API で配信予定取得 <- ok
 
 
 def main():
-    print('start!!')
+    print(datetime.datetime.now(JST).strftime(
+        '%Y-%m-%d %H:%M:%S :: ') + 'start!!')
 
     tokenList = getAccessTokenList()
     streamDetailsList = getStreamDetailList()
@@ -52,8 +54,10 @@ def main():
                         tz = datetime.timezone.utc if dt['Z'] == 'Z' else datetime.timezone(
                             datetime.timedelta(hours=dt['Z']))
                         eyStartTime = datetime.datetime(
-                            dt['Y'], dt['M'], dt['D'], dt['h'], dt['m'], dt['s'], tzinfo=tz)
-                        if ey['title'] != ec['summary'] or eyStartTime != ec['start']['dateTime'] or ey['who'] != ec['description']:
+                            dt['Y'], dt['M'], dt['D'], dt['h'], dt['m'], dt['s'], tzinfo=tz).astimezone(JST)
+                        ecStartTime = datetime.datetime.fromisoformat(
+                            ec['start']['dateTime']).astimezone(JST)
+                        if ey['title'] != ec['summary'] or eyStartTime != ecStartTime or ey['who'] != ec['description']:
                             #   カレンダーの更新
                             body = {
                                 'summary': ey['title'],
@@ -66,6 +70,7 @@ def main():
                                 }
                             }
                             clndr.updateEvent(calendarId, ec['id'], body)
+                            print('[update] ' + ey['title'])
 
                         #   特定URLの予定が存在する
                         #   ここでEinCからecを削除する
@@ -93,15 +98,18 @@ def main():
                 endTime = {'dateTime': (
                     eyStartTime + datetime.timedelta(hours=1)).isoformat()}
                 clndr.insertEvent(calendarId, body, startTime, endTime)
+                print('[insert] ' + ey['title'])
 
         #   すべてが終わったら
         #   残ったEinCを予定から削除
         for ec in EinC:
             clndr.deleteEvent(calendarId, ec['id'])
+            print('[delete] ' + ec['summary'])
 
         del clndr
 
-    print('finished!!')
+    print(datetime.datetime.now(JST).strftime(
+        '%Y-%m-%d %H:%M:%S :: ') + 'finished!!')
 
 
 def getStreamDetailList():
@@ -119,7 +127,14 @@ def getStreamDetailList():
 
         for urls in urlList['urlList'].values():
             for url in urls:
-                strmDetails += yt.getStreamDetailsFromURL(url)
+                try:
+                    strmDetails += yt.getStreamDetailsFromURL(url)
+
+                except Exception as e:
+                    print('ERROR!!')
+                    print(e.args)
+                    print('stopped!!')
+                    quit()
 
         strmDetailsList[urlList['id']] = strmDetails
 
@@ -169,17 +184,18 @@ def getAccessTokenList():
 
 def initCalendar():
     db = Database(DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS)
-    noClndrIds = db.getRecordWithColumns(
-        DB_TABLE, ['id', 'accessToken'], {'calendarId': ''})
+    users = db.getAllRecordsWithColumns(
+        DB_TABLE, ['id', 'accessToken', 'calendarId'])
 
-    for noClndrId in noClndrIds:
-        clndr = CalendarAPI(CLIENT_ID, CLIENT_SECRET, noClndrId['accessToken'])
-        clndrId = clndr.makeNewCalendar(
-            '配信予定', description='create by Calendar from Stream Service')
-        del clndr
+    for user in users:
+        clndr = CalendarAPI(CLIENT_ID, CLIENT_SECRET, user['accessToken'])
+        if not ('calendarId' in user) or not (clndr.getCalendar(user['calendarId'])):
+            clndrId = clndr.makeNewCalendar(
+                '配信予定', description='create by Calendar from Stream Service')
+            del clndr
 
-        db.updateRecordWithColumns(DB_TABLE, {'calendarId': clndrId}, {
-                                   'id': noClndrId['id']})
+            db.updateRecordWithColumns(DB_TABLE, {'calendarId': clndrId}, {
+                'id': user['id']})
 
 
 def getCalendarIdFromDB(userId):
@@ -191,7 +207,7 @@ def getCalendarIdFromDB(userId):
 
 
 if __name__ == '__main__':
-    schedule.every(10).minutes.do(main)
+    schedule.every(1).hours.do(main)
 
     while True:
         schedule.run_pending()

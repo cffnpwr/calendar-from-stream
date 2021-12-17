@@ -58,15 +58,11 @@ class YoutubeAPI:
         rslt = req.execute()
         resultCnt = rslt['pageInfo']['totalResults']
 
-        if resultCnt == 0:
-            return None
+        strmList = []
+        for i in range(resultCnt):
+            strmList.append(rslt['items'][i]['id']['videoId'])
 
-        else:
-            strmList = []
-            for i in range(resultCnt):
-                strmList.append(rslt['items'][i]['id']['videoId'])
-
-            return strmList
+        return strmList
 
     def getStreamDetailsFromVideoID(self, videoId):
         req = self.youtube.videos().list(
@@ -121,8 +117,9 @@ def convertTimeZone(YMDhmsZDic, dstTZ):
     else:
         nowTz = int(YMDhmsZDic[0:3])
 
-    diff = tz - nowTz
+    diff = tz + nowTz
     rsltDate = YMDhmsZDic
+    rsltDate['Z'] = tz
 
     rsltDate['h'] += diff
     if rsltDate['h'] < 0:

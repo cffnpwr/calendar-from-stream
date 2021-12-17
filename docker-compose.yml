@@ -34,4 +34,4 @@ services:
       - db
       - backend
     command: python main.py
-    tty: true
+    restart: always

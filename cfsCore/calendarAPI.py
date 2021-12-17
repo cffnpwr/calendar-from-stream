@@ -30,6 +30,15 @@ class CalendarAPI:
 
         return res['id']
 
+    def getCalendar(self, calendarId):
+        try:
+            rslt = self.clndr.calendars().get(calendarId=calendarId).execute()
+
+            return rslt
+
+        except:
+            return None
+
     def getEvents(self, calendarId, timeMin=datetime.datetime.utcnow().isoformat() + 'Z', orderBy='startTime') -> list:
         rslts = self.clndr.events().list(
             calendarId=calendarId,
@@ -52,7 +61,7 @@ class CalendarAPI:
         self.clndr.events().delete(
             calendarId=calendarId,
             eventId=eventId
-        )
+        ).execute()
 
     def insertEvent(self, calendarId, body, start='', end=''):
         body['start'] = start
