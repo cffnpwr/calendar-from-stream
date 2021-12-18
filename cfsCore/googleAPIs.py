@@ -23,6 +23,9 @@ def refreshAccessToken(clientId, clientSecret, refreshToken):
 def getNewAccessToken(clientId, clientSecret, refreshToken):
     res = refreshAccessToken(clientId, clientSecret, refreshToken)
 
+    if 'error' in res:
+        return {}
+
     isValid = validateIdToken(
         res['id_token'],
         'https://www.googleapis.com/oauth2/v3/certs',
@@ -38,7 +41,7 @@ def getNewAccessToken(clientId, clientSecret, refreshToken):
 
         return data
 
-    return None
+    return {}
 
 
 def validateIdToken(token, jwksURI, issuer, clientId):

@@ -20,13 +20,6 @@ DB_PASS = 'postgres'
 DB_TABLE = 'user_user'
 JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
 
-'''
-DBから全取得 <- ok
-Youtube API で配信予定取得 <- ok
-既存の予定とURLで照合 <- イマココ
-時間変更、新規追加、未来の予定が消えてたら削除
-'''
-
 
 def main():
     print(datetime.datetime.now(JST).strftime(
@@ -38,75 +31,79 @@ def main():
     initCalendar()
 
     for userId, token in tokenList.items():
-        EinY = streamDetailsList[userId]
+        try:
+            EinY = streamDetailsList[userId]
 
-        calendarId = getCalendarIdFromDB(userId)
+            calendarId = getCalendarIdFromDB(userId)
 
-        clndr = CalendarAPI(CLIENT_ID, CLIENT_SECRET, token)
-        EinC = clndr.getEvents(calendarId)
+            clndr = CalendarAPI(CLIENT_ID, CLIENT_SECRET, token)
+            EinC = clndr.getEvents(calendarId)
 
-        for ey in EinY:
-            isExist = False
-            for i, ec in enumerate(EinC):
-                if 'location' in ec:
-                    if ey['url'] == ec['location']:
-                        dt = ey['startTime']
-                        tz = datetime.timezone.utc if dt['Z'] == 'Z' else datetime.timezone(
-                            datetime.timedelta(hours=dt['Z']))
-                        eyStartTime = datetime.datetime(
-                            dt['Y'], dt['M'], dt['D'], dt['h'], dt['m'], dt['s'], tzinfo=tz).astimezone(JST)
-                        ecStartTime = datetime.datetime.fromisoformat(
-                            ec['start']['dateTime']).astimezone(JST)
-                        if ey['title'] != ec['summary'] or eyStartTime != ecStartTime or ey['who'] != ec['description']:
-                            #   カレンダーの更新
-                            body = {
-                                'summary': ey['title'],
-                                'description': ey['who'],
-                                'start': {
-                                    'dateTime': eyStartTime.isoformat()
-                                },
-                                'end': {
-                                    'dateTime': (eyStartTime + datetime.timedelta(hours=1)).isoformat()
+            for ey in EinY:
+                isExist = False
+                for i, ec in enumerate(EinC):
+                    if 'location' in ec:
+                        if ey['url'] == ec['location']:
+                            dt = ey['startTime']
+                            tz = datetime.timezone.utc if dt['Z'] == 'Z' else datetime.timezone(
+                                datetime.timedelta(hours=dt['Z']))
+                            eyStartTime = datetime.datetime(
+                                dt['Y'], dt['M'], dt['D'], dt['h'], dt['m'], dt['s'], tzinfo=tz).astimezone(JST)
+                            ecStartTime = datetime.datetime.fromisoformat(
+                                ec['start']['dateTime']).astimezone(JST)
+                            if ey['title'] != ec['summary'] or eyStartTime != ecStartTime or ey['who'] != ec['description']:
+                                #   カレンダーの更新
+                                body = {
+                                    'summary': ey['title'],
+                                    'description': ey['who'],
+                                    'start': {
+                                        'dateTime': eyStartTime.isoformat()
+                                    },
+                                    'end': {
+                                        'dateTime': (eyStartTime + datetime.timedelta(hours=1)).isoformat()
+                                    }
                                 }
-                            }
-                            clndr.updateEvent(calendarId, ec['id'], body)
-                            print('[update] ' + ey['title'])
+                                clndr.updateEvent(calendarId, ec['id'], body)
+                                print('[update] ' + ey['title'])
 
-                        #   特定URLの予定が存在する
-                        #   ここでEinCからecを削除する
-                        del EinC[i]
-                        isExist = True
-                        break
+                            #   特定URLの予定が存在する
+                            #   ここでEinCからecを削除する
+                            del EinC[i]
+                            isExist = True
+                            break
 
-                    #   URLが違うので次のecへ
+                        #   URLが違うので次のecへ
 
-            #   ecが存在したなら何もしない
-            #   ecが存在しなかったら予定追加
-            if not isExist:
-                #   予定追加
-                dt = ey['startTime']
-                tz = datetime.timezone.utc if dt['Z'] == 'Z' else datetime.timezone(
-                    datetime.timedelta(hours=dt['Z']))
-                eyStartTime = datetime.datetime(
-                    dt['Y'], dt['M'], dt['D'], dt['h'], dt['m'], dt['s'], tzinfo=tz)
-                body = {
-                    'summary': ey['title'],
-                    'description': ey['who'],
-                    'location': ey['url']
-                }
-                startTime = {'dateTime': eyStartTime.isoformat()}
-                endTime = {'dateTime': (
-                    eyStartTime + datetime.timedelta(hours=1)).isoformat()}
-                clndr.insertEvent(calendarId, body, startTime, endTime)
-                print('[insert] ' + ey['title'])
+                #   ecが存在したなら何もしない
+                #   ecが存在しなかったら予定追加
+                if not isExist:
+                    #   予定追加
+                    dt = ey['startTime']
+                    tz = datetime.timezone.utc if dt['Z'] == 'Z' else datetime.timezone(
+                        datetime.timedelta(hours=dt['Z']))
+                    eyStartTime = datetime.datetime(
+                        dt['Y'], dt['M'], dt['D'], dt['h'], dt['m'], dt['s'], tzinfo=tz)
+                    body = {
+                        'summary': ey['title'],
+                        'description': ey['who'],
+                        'location': ey['url']
+                    }
+                    startTime = {'dateTime': eyStartTime.isoformat()}
+                    endTime = {'dateTime': (
+                        eyStartTime + datetime.timedelta(hours=1)).isoformat()}
+                    clndr.insertEvent(calendarId, body, startTime, endTime)
+                    print('[insert] ' + ey['title'])
 
-        #   すべてが終わったら
-        #   残ったEinCを予定から削除
-        for ec in EinC:
-            clndr.deleteEvent(calendarId, ec['id'])
-            print('[delete] ' + ec['summary'])
+            #   すべてが終わったら
+            #   残ったEinCを予定から削除
+            for ec in EinC:
+                clndr.deleteEvent(calendarId, ec['id'])
+                print('[delete] ' + ec['summary'])
 
-        del clndr
+            del clndr
+
+        except:
+            pass
 
     print(datetime.datetime.now(JST).strftime(
         '%Y-%m-%d %H:%M:%S :: ') + 'finished!!')
@@ -134,7 +131,7 @@ def getStreamDetailList():
                     print('ERROR!!')
                     print(e.args)
                     print('stopped!!')
-                    quit()
+                    break
 
         strmDetailsList[urlList['id']] = strmDetails
 
@@ -155,23 +152,27 @@ def getAccessTokenList():
             newTokenDic = googleAPIs.getNewAccessToken(
                 CLIENT_ID, CLIENT_SECRET, record['refreshToken'])
 
-            newExpiryDate = datetime.datetime.now(
-                datetime.timezone.utc) + datetime.timedelta(seconds=newTokenDic['exp'])
-            if newTokenDic['id'] == record['id'] and newExpiryDate > datetime.datetime.now(datetime.timezone.utc):
-                newAccessToken = newTokenDic['accessToken']
+            if ('id' in newTokenDic) and ('accessToken' in newTokenDic) and ('exp' in newTokenDic):
+                newExpiryDate = datetime.datetime.now(
+                    datetime.timezone.utc) + datetime.timedelta(seconds=newTokenDic['exp'])
+                if newTokenDic['id'] == record['id'] and newExpiryDate > datetime.datetime.now(datetime.timezone.utc):
+                    newAccessToken = newTokenDic['accessToken']
 
-                values = {
-                    'accessToken': newAccessToken,
-                    'expiryDate': newExpiryDate
-                }
-                cond = {
-                    'id': record['id']
-                }
+                    values = {
+                        'accessToken': newAccessToken,
+                        'expiryDate': newExpiryDate
+                    }
+                    cond = {
+                        'id': record['id']
+                    }
 
-                db.updateRecordWithColumns(DB_TABLE, values, cond)
+                    db.updateRecordWithColumns(DB_TABLE, values, cond)
+
+                else:
+                    newAccessToken = ''
 
             else:
-                newAccessToken = None
+                newAccessToken = ''
 
             accessToken = newAccessToken
 
@@ -190,12 +191,16 @@ def initCalendar():
     for user in users:
         clndr = CalendarAPI(CLIENT_ID, CLIENT_SECRET, user['accessToken'])
         if not ('calendarId' in user) or not (clndr.getCalendar(user['calendarId'])):
-            clndrId = clndr.makeNewCalendar(
-                '配信予定', description='create by Calendar from Stream Service')
-            del clndr
+            try:
+                clndrId = clndr.makeNewCalendar(
+                    '配信予定', description='create by Calendar from Stream Service')
+                del clndr
 
-            db.updateRecordWithColumns(DB_TABLE, {'calendarId': clndrId}, {
-                'id': user['id']})
+                db.updateRecordWithColumns(DB_TABLE, {'calendarId': clndrId}, {
+                    'id': user['id']})
+
+            except:
+                pass
 
 
 def getCalendarIdFromDB(userId):
@@ -208,6 +213,7 @@ def getCalendarIdFromDB(userId):
 
 if __name__ == '__main__':
     schedule.every(1).hours.do(main)
+    main()
 
     while True:
         schedule.run_pending()
