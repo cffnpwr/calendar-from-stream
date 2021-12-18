@@ -1,5 +1,3 @@
-import schedule
-import time
 import datetime
 from decouple import config
 
@@ -212,9 +210,4 @@ def getCalendarIdFromDB(userId):
 
 
 if __name__ == '__main__':
-    schedule.every(1).hours.do(main)
     main()
-
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
