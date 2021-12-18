@@ -39,7 +39,7 @@ class CalendarAPI:
         except:
             return None
 
-    def getEvents(self, calendarId, timeMin=datetime.datetime.utcnow().isoformat() + 'Z', orderBy='startTime') -> list:
+    def getEvents(self, calendarId, timeMin=datetime.datetime.now(datetime.timezone.utc).isoformat(), orderBy='startTime'):
         rslts = self.clndr.events().list(
             calendarId=calendarId,
             timeMin=timeMin,
