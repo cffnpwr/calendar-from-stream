@@ -37,6 +37,10 @@ def main():
             clndr = CalendarAPI(CLIENT_ID, CLIENT_SECRET, token)
             EinC = clndr.getEvents(calendarId)
 
+            for i, ec in enumerate(EinC):
+                if datetime.datetime.fromisoformat(ec['start']['dateTime']).astimezone(JST) < datetime.datetime.now(JST):
+                    del EinC[i]
+
             for ey in EinY:
                 isExist = False
                 for i, ec in enumerate(EinC):
